@@ -18,7 +18,7 @@ type result struct {
 	contentLength int64
 }
 
-func RunBench(b *httplib.BeegoHttpRequest) {
+func runBench(b *httplib.BeegoHttpRequest) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	start := time.Now()
 	results := make(chan *result, benchN)

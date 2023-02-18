@@ -6,15 +6,6 @@ import (
 	"strings"
 )
 
-func inSlice(str string, l []string) bool {
-	for i := range l {
-		if l[i] == str {
-			return true
-		}
-	}
-	return false
-}
-
 func toRealType(str string) interface{} {
 	if i, err := isint(str); err == nil {
 		return i
