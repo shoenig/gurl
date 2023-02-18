@@ -15,10 +15,11 @@
 package httplib
 
 import (
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/shoenig/ignore"
 )
 
 func TestResponse(t *testing.T) {
@@ -27,6 +28,9 @@ func TestResponse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() {
+		_ = resp.Body.Close()
+	})
 	t.Log(resp)
 }
 
@@ -173,6 +177,9 @@ func TestToJson(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() {
+		_ = resp.Body.Close()
+	})
 	t.Log(resp)
 
 	// httpbin will return http remote addr
@@ -180,7 +187,7 @@ func TestToJson(t *testing.T) {
 		Origin string `json:"origin"`
 	}
 	var ip Ip
-	err = req.ToJson(&ip)
+	err = req.ToJSON(&ip)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,8 +205,10 @@ func TestToFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(f)
-	b, err := ioutil.ReadFile(f)
+	defer func() {
+		ignore.Error(os.Remove(f))
+	}()
+	b, err := os.ReadFile(f)
 	if n := strings.Index(string(b), "origin"); n == -1 {
 		t.Fatal(err)
 	}

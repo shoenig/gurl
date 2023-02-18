@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -62,7 +62,7 @@ func getHTTP(method string, url string, args []string) (r *httplib.BeegoHttpRequ
 				if err != nil {
 					log.Fatal("Read File", strings.TrimLeft(strs[1], "@"), err)
 				}
-				content, err := ioutil.ReadAll(f)
+				content, err := io.ReadAll(f)
 				if err != nil {
 					log.Fatal("ReadAll from File", strings.TrimLeft(strs[1], "@"), err)
 				}
@@ -85,7 +85,7 @@ func getHTTP(method string, url string, args []string) (r *httplib.BeegoHttpRequ
 				if err != nil {
 					log.Fatal("Read File", strings.TrimLeft(strs[1], "@"), err)
 				}
-				content, err := ioutil.ReadAll(f)
+				content, err := io.ReadAll(f)
 				if err != nil {
 					log.Fatal("ReadAll from File", strings.TrimLeft(strs[1], "@"), err)
 				}
@@ -100,7 +100,7 @@ func getHTTP(method string, url string, args []string) (r *httplib.BeegoHttpRequ
 		}
 	}
 	if !form && len(jsonmap) > 0 {
-		r.JsonBody(jsonmap)
+		_, _ = r.JsonBody(jsonmap)
 	}
 	return
 }

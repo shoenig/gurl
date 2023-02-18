@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	DEFAULT_REFRESH_RATE = time.Millisecond * 200
-	FORMAT               = "[=>-]"
+	defaultRefreshRate = time.Millisecond * 200
+	format             = "[=>-]"
 )
 
 type ProgressBar struct {
@@ -35,7 +35,7 @@ type ProgressBar struct {
 func NewProgressBar(total int64) (pb *ProgressBar) {
 	pb = &ProgressBar{
 		Total:         total,
-		RefreshRate:   DEFAULT_REFRESH_RATE,
+		RefreshRate:   defaultRefreshRate,
 		ShowPercent:   true,
 		ShowBar:       true,
 		ShowCounters:  true,
@@ -61,7 +61,7 @@ func (pb *ProgressBar) Start() {
 	go pb.writer()
 }
 
-// Write the current state of the progressbar
+// Update will write the current state of the progressbar.
 func (pb *ProgressBar) Update() {
 	c := atomic.LoadInt64(&pb.current)
 	if c != pb.currentValue {
@@ -100,7 +100,7 @@ func (pb *ProgressBar) Add64(add int64) int64 {
 	return atomic.AddInt64(&pb.current, add)
 }
 
-// End print
+// Finish will end printing.
 func (pb *ProgressBar) Finish() {
 	atomic.StoreInt32(&pb.isFinish, 1)
 	pb.write(atomic.LoadInt64(&pb.current))
@@ -134,22 +134,21 @@ func (pb *ProgressBar) write(current int64) {
 	}
 
 	// time left
-	fromStart := time.Now().Sub(pb.startTime)
+	fromStart := time.Since(pb.startTime)
 	if atomic.LoadInt32(&pb.isFinish) != 0 {
 		if pb.ShowFinalTime {
-			left := (fromStart / time.Second) * time.Second
+			left := fromStart
 			timeLeftBox = left.String()
 		}
 	} else if pb.ShowTimeLeft && current > 0 {
 		perEntry := fromStart / time.Duration(current)
 		left := time.Duration(pb.Total-current) * perEntry
-		left = (left / time.Second) * time.Second
 		timeLeftBox = left.String()
 	}
 
 	// speed
 	if pb.ShowSpeed && current > 0 {
-		fromStart := time.Now().Sub(pb.startTime)
+		fromStart := time.Since(pb.startTime)
 		speed := float64(current) / (float64(fromStart) / float64(time.Second))
 		speedBox = FormatBytes(int64(speed)) + "/s "
 	}
