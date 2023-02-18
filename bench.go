@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/bat/httplib"
+	"github.com/shoenig/gurl/httplib"
 )
 
 type result struct {
