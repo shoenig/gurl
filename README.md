@@ -1,8 +1,9 @@
-# bat
-Go implemented CLI cURL-like tool for humans. Bat can be used for testing, debugging, and generally interacting with HTTP servers.
+# gURL
+Go implemented CLI cURL-like tool for humans. `gurl` can be used for testing, debugging, and generally interacting with HTTP servers.
 
 Inspired by [Httpie](https://github.com/jakubroztocil/httpie). Thanks to the author, Jakub.
 
+This is a fork of [astaxie/bat](https://github.com/astaxie/bat). Thanks to the author, `astaxie`.
 
 ![](images/logo.png)
 
@@ -20,14 +21,6 @@ Inspired by [Httpie](https://github.com/jakubroztocil/httpie). Thanks to the aut
 - [Authentication](#authentication)
 - [Proxies](#proxies)
 
-## Docker
-
-    # Build the docker image
-	$ docker build -t astaxie/bat .
-	
-	# Run bat in a container
-	$ docker run --rm -it --net=host astaxie/bat example.org
-
 ## Main Features
 
 - Expressive and intuitive syntax
@@ -39,114 +32,102 @@ Inspired by [Httpie](https://github.com/jakubroztocil/httpie). Thanks to the aut
 
 ## Installation
 
-### Install with Modules - Go 1.11 or higher
+### Install with Go modules
 
-If you only want to install the `bat` tool:
+If you only want to install the `gurl` tool:
 
-	go get -u github.com/astaxie/bat
+	go install github.com/shoenig/gurl@latest
 
-If you want a mutable copy of source code:
-
-	git clone https://github.com/astaxie/bat ;# clone outside of GOPATH
-	cd bat
-	go install
-
-Make sure the `~/go/bin` is added into `$PATH`.
-
-### Install without Modules - Before Go 1.11
-
-	go get -u github.com/astaxie/bat
-
-Make sure the `$GOPATH/bin` is added into `$PATH`.
+Make sure the `~/go/bin` (or `$GOBIN`) is added into `$PATH`.
 
 ## Usage
 
 Hello World:
 
-	$ bat beego.me
+	$ gurl example.com
 
 Synopsis:
 
-	bat [flags] [METHOD] URL [ITEM [ITEM]]
+	gurl [flags] [METHOD] URL [ITEM [ITEM]]
 	
-See also `bat --help`.	
+See also `gurl --help`.	
 
 ### Examples
 
 Basic settings - [HTTP method](#http-method), [HTTP headers](#http-headers) and [JSON](#json) data:
 
-	$ bat PUT example.org X-API-Token:123 name=John
+	$ gurl PUT example.com X-API-Token:123 name=John
 
 Any custom HTTP method (such as WebDAV, etc.):
 
-	$ bat -method=PROPFIND example.org name=John
+	$ gurl -method=PROPFIND example.com name=John
 
 Submitting forms:
 
-	$ bat -form=true POST example.org hello=World
+	$ gurl -form=true POST example.com hello=World
 	
 See the request that is being sent using one of the output options:
 
-	$ bat -print="Hhb" example.org
+	$ gurl -print="Hhb" example.com
 
 Use Github API to post a comment on an issue with authentication:
 
-	$ bat -a USERNAME POST https://api.github.com/repos/astaxie/bat/issues/1/comments body='bat is awesome!'
+	$ gurl -a USERNAME POST https://api.github.com/repos/shoenig/gurl/issues/1/comments body='gurl is awesome!'
 
 Upload a file using redirected input:
 
-	$ bat example.org < file.json
+	$ gurl example.com < file.json
 	
 Download a file and save it via redirected output:
 
-	$ bat example.org/file > file
+	$ gurl example.com/file > file
 	
 Download a file wget style:
 
-	$ bat -download=true example.org/file
+	$ gurl -download=true example.com/file
 
 Set a custom Host header to work around missing DNS records:
 
-	$ bat localhost:8000 Host:example.com
+	$ gurl localhost:8000 Host:example.com
 	
 Following is the detailed documentation. It covers the command syntax, advanced usage, and also features additional examples.
 	
 ## HTTP Method
 The name of the HTTP method comes right before the URL argument:
 
-	$ bat DELETE example.org/todos/7
+	$ gurl DELETE example.com/todos/7
 	
 which looks similar to the actual Request-Line that is sent:
 
 DELETE /todos/7 HTTP/1.1
 
-When the METHOD argument is omitted from the command, bat defaults to either GET (if there is no request data) or POST (with request data).
+When the METHOD argument is omitted from the command, gurl defaults to either GET (if there is no request data) or POST (with request data).
 
 ## Request URL
-The only information bat needs to perform a request is a URL. The default scheme is, somewhat unsurprisingly, http://, and can be omitted from the argument – `bat example.org` works just fine.
+The only information gurl needs to perform a request is a URL. The default scheme is, somewhat unsurprisingly, http://, and can be omitted from the argument – `gurl example.org` works just fine.
 
 Additionally, curl-like shorthand for localhost is supported. This means that, for example :3000 would expand to http://localhost:3000 If the port is omitted, then port 80 is assumed.
 
-	$ bat :/foo
+	$ gurl :/foo
 
 	GET /foo HTTP/1.1
 	Host: localhost
 
-	$ bat :3000/bar
+	$ gurl :3000/bar
 	
 	GET /bar HTTP/1.1
 	Host: localhost:3000
 
-	$ bat :
+	$ gurl :
 
 	GET / HTTP/1.1
 	Host: localhost
 
-If you find yourself manually constructing URLs with query string parameters on the terminal, you may appreciate the `param=value` syntax for appending URL parameters so that you don't have to worry about escaping the & separators. To search for bat on Google Images you could use this command:
+If you find yourself manually constructing URLs with query string parameters on the terminal, you may appreciate the `param=value` syntax for appending URL parameters so that you don't have to worry about escaping the & separators. To search for gurl on Google Images you could use this command:
 
-	$ bat GET www.google.com search=bat tbm=isch
+	$ gurl GET www.google.com search=gurl tbm=isch
 
-	GET /?search=bat&tbm=isch HTTP/1.1
+	GET /?search=gurl&tbm=isch HTTP/1.1
 
 ## Request Items
 There are a few different request item types that provide a convenient mechanism for specifying HTTP headers, simple JSON and form data, files, and URL parameters.
@@ -166,20 +147,20 @@ You can use `\` to escape characters that shouldn't be used as separators (or pa
 
 You can also quote values, e.g. `foo="bar baz"`.
 ## JSON
-JSON is the lingua franca of modern web services and it is also the implicit content type bat by default uses:
+JSON is the lingua franca of modern web services and it is also the implicit content type gurl by default uses:
 
-If your command includes some data items, they are serialized as a JSON object by default. bat also automatically sets the following headers, both of which can be overridden:
+If your command includes some data items, they are serialized as a JSON object by default. gurl also automatically sets the following headers, both of which can be overridden:
 
 | header       | value            |
 | ------------ | ---------------- |
 | Content-Type | application/json |
 | Accept       | application/json |
 
-You can use --json=true, -j=true to explicitly set Accept to `application/json` regardless of whether you are sending data (it's a shortcut for setting the header via the usual header notation – `bat url Accept:application/json`).
+You can use --json=true, -j=true to explicitly set Accept to `application/json` regardless of whether you are sending data (it's a shortcut for setting the header via the usual header notation – `gurl url Accept:application/json`).
 
 Simple example:
 
-	$ bat PUT example.org name=John email=john@example.org
+	$ gurl PUT example.org name=John email=john@example.com
 	PUT / HTTP/1.1
 	Accept: application/json
 	Accept-Encoding: gzip, deflate
@@ -188,12 +169,12 @@ Simple example:
 	
 	{
 	    "name": "John",
-	    "email": "john@example.org"
+	    "email": "john@example.com"
 	}
 
 Even custom/vendored media types that have a json format are getting detected, as long as they implement a json type response and contain a `json` in their declared form:
 
-	$ bat GET example.org/user/1 Accept:application/vnd.example.v2.0+json
+	$ gurl GET example.com/user/1 Accept:application/vnd.example.v2.0+json
 	GET / HTTP/1.1
 	Accept: application/vnd.example.v2.0+json
 	Accept-Encoding: gzip, deflate
@@ -202,12 +183,12 @@ Even custom/vendored media types that have a json format are getting detected, a
 
 	{
 	    "name": "John",
-	    "email": "john@example.org"
+	    "email": "john@example.com"
 	}
 
 Non-string fields use the := separator, which allows you to embed raw JSON into the resulting object. Text and raw JSON files can also be embedded into fields using =@ and :=@:
 
-	$ bat PUT api.example.com/person/1 \
+	$ gurl PUT api.example.com/person/1 \
     name=John \
     age:=29 married:=false hobbies:='["http", "pies"]' \  # Raw JSON
     description=@about-john.txt \   # Embed text file
@@ -234,7 +215,7 @@ Non-string fields use the := separator, which allows you to embed raw JSON into 
 	
 Send JSON data stored in a file (see redirected input for more examples):
 
-	$ bat POST api.example.com/person/1 < person.json
+	$ gurl POST api.example.com/person/1 < person.json
 	
 ## Forms
 Submitting forms are very similar to sending JSON requests. Often the only difference is in adding the `-form=true`, `-f` option, which ensures that data fields are serialized correctly and Content-Type is set to, `application/x-www-form-urlencoded; charset=utf-8`.
@@ -243,7 +224,7 @@ It is possible to make form data the implicit content type instead of JSON via t
 
 ### Regular Forms
 
-	$ bat -f=true POST api.example.org/person/1 name='John Smith' \
+	$ gurl -f=true POST api.example.org/person/1 name='John Smith' \
     email=john@example.org
 
 	POST /person/1 HTTP/1.1
@@ -255,7 +236,7 @@ It is possible to make form data the implicit content type instead of JSON via t
 
 If one or more file fields is present, the serialization and content type is `multipart/form-data`:
 
-	$ bat -f=true POST example.com/jobs name='John Smith' cv@~/Documents/cv.pdf
+	$ gurl -f=true POST example.com/jobs name='John Smith' cv@~/Documents/cv.pdf
 	
 The request above is the same as if the following HTML form were submitted:
 
@@ -271,7 +252,7 @@ Note that `@` is used to simulate a file upload form field.
 ## HTTP Headers
 To set custom headers you can use the Header:Value notation:
 
-	$ bat example.org  User-Agent:Bacon/1.0  'Cookie:valued-visitor=yes;foo=bar'  \
+	$ gurl example.org  User-Agent:Bacon/1.0  'Cookie:valued-visitor=yes;foo=bar'  \
     X-Foo:Bar  Referer:http://beego.me/
 
 	GET / HTTP/1.1
@@ -283,12 +264,12 @@ To set custom headers you can use the Header:Value notation:
 	User-Agent: Bacon/1.0
 	X-Foo: Bar
 	
-There are a couple of default headers that bat sets:
+There are a couple of default headers that gurl sets:
 
 	GET / HTTP/1.1
 	Accept: */*
 	Accept-Encoding: gzip, deflate
-	User-Agent: bat/<version>
+	User-Agent: gurl/<version>
 	Host: <taken-from-URL>
 
 Any of the default headers can be overridden.
@@ -296,16 +277,16 @@ Any of the default headers can be overridden.
 # Authentication
 Basic auth:
 
-	$ bat -a=username:password example.org
+	$ gurl -a=username:password example.org
 
 # Proxies
 You can specify proxies to be used through the --proxy argument for each protocol (which is included in the value in case of redirects across protocols):
 
-	$ bat --proxy=http://10.10.1.10:3128 example.org
+	$ gurl --proxy=http://10.10.1.10:3128 example.org
 	
 With Basic authentication:
 
-	$ bat --proxy=http://user:pass@10.10.1.10:3128 example.org
+	$ gurl --proxy=http://user:pass@10.10.1.10:3128 example.org
 	
 You can also configure proxies by environment variables HTTP_PROXY and HTTPS_PROXY, and the underlying Requests library will pick them up as well. If you want to disable proxies configured through the environment variables for certain hosts, you can specify them in NO_PROXY.
 
