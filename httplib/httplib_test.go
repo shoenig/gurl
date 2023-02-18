@@ -19,38 +19,25 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shoenig/ignore"
+	"github.com/shoenig/test/must"
 )
 
 func TestResponse(t *testing.T) {
 	req := Get("http://httpbin.org/get")
 	resp, err := req.Response()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		_ = resp.Body.Close()
-	})
-	t.Log(resp)
+	must.NoError(t, err)
+	must.NoError(t, resp.Body.Close())
+	must.Eq(t, "application/json", resp.Header.Get("Content-Type"))
 }
 
 func TestGet(t *testing.T) {
 	req := Get("http://httpbin.org/get")
 	b, err := req.Bytes()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(b)
+	must.NoError(t, err)
 
-	s, err := req.String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(s)
-
-	if string(b) != s {
-		t.Fatal("request data not match")
-	}
+	str, strErr := req.String()
+	must.NoError(t, strErr)
+	must.Eq(t, str, string(b))
 }
 
 func TestSimplePost(t *testing.T) {
@@ -59,96 +46,57 @@ func TestSimplePost(t *testing.T) {
 	req.Param("username", v)
 
 	str, err := req.String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(str)
-
-	n := strings.Index(str, v)
-	if n == -1 {
-		t.Fatal(v + " not found in post")
-	}
+	must.NoError(t, err)
+	must.StrContains(t, str, v)
 }
 
-//func TestPostFile(t *testing.T) {
-//	v := "smallfish"
-//	req := Post("http://httpbin.org/post")
-//	req.Debug(true)
-//	req.Param("username", v)
-//	req.PostFile("uploadfile", "httplib_test.go")
+func TestPostFile(t *testing.T) {
+	t.Skip("avoid spamming posts")
 
-//	str, err := req.String()
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//	t.Log(str)
+	v := "smallfish"
+	req := Post("http://httpbin.org/post")
+	req.Debug(true)
+	req.Param("username", v)
+	req.PostFile("uploadfile", "httplib_test.go")
 
-//	n := strings.Index(str, v)
-//	if n == -1 {
-//		t.Fatal(v + " not found in post")
-//	}
-//}
+	str, err := req.String()
+	must.NoError(t, err)
+	must.StrContains(t, str, v)
+}
 
 func TestSimplePut(t *testing.T) {
 	str, err := Put("http://httpbin.org/put").String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(str)
+	must.NoError(t, err)
+	must.StrContains(t, str, "http://httpbin.org/put")
 }
 
 func TestSimpleDelete(t *testing.T) {
 	str, err := Delete("http://httpbin.org/delete").String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(str)
+	must.NoError(t, err)
+	must.StrContains(t, str, "http://httpbin.org/delete")
 }
 
 func TestWithCookie(t *testing.T) {
 	v := "smallfish"
-	str, err := Get("http://httpbin.org/cookies/set?k1=" + v).SetEnableCookie(true).String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(str)
+	_, err1 := Get("http://httpbin.org/cookies/set?k1=" + v).SetEnableCookie(true).String()
+	must.NoError(t, err1)
 
-	str, err = Get("http://httpbin.org/cookies").SetEnableCookie(true).String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(str)
-
-	n := strings.Index(str, v)
-	if n == -1 {
-		t.Fatal(v + " not found in cookie")
-	}
+	str, err := Get("http://httpbin.org/cookies").SetEnableCookie(true).String()
+	must.NoError(t, err)
+	must.StrContains(t, str, v)
 }
 
 func TestWithBasicAuth(t *testing.T) {
 	str, err := Get("http://httpbin.org/basic-auth/user/passwd").SetBasicAuth("user", "passwd").String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(str)
-	n := strings.Index(str, "authenticated")
-	if n == -1 {
-		t.Fatal("authenticated not found in response")
-	}
+	must.NoError(t, err)
+	must.StrContains(t, str, "authenticated")
 }
 
 func TestWithUserAgent(t *testing.T) {
 	v := "beego"
 	str, err := Get("http://httpbin.org/headers").SetUserAgent(v).String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(str)
-
-	n := strings.Index(str, v)
-	if n == -1 {
-		t.Fatal(v + " not found in user-agent")
-	}
+	must.NoError(t, err)
+	must.StrContains(t, str, v)
 }
 
 func TestWithSetting(t *testing.T) {
@@ -160,66 +108,47 @@ func TestWithSetting(t *testing.T) {
 	SetDefaultSetting(setting)
 
 	str, err := Get("http://httpbin.org/get").String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(str)
-
-	n := strings.Index(str, v)
-	if n == -1 {
-		t.Fatal(v + " not found in user-agent")
-	}
+	must.NoError(t, err)
+	must.StrContains(t, str, v)
 }
 
 func TestToJson(t *testing.T) {
 	req := Get("http://httpbin.org/ip")
 	resp, err := req.Response()
-	if err != nil {
-		t.Fatal(err)
-	}
+	must.NoError(t, err)
 	t.Cleanup(func() {
 		_ = resp.Body.Close()
 	})
-	t.Log(resp)
 
 	// httpbin will return http remote addr
-	type Ip struct {
+	type IP struct {
 		Origin string `json:"origin"`
 	}
-	var ip Ip
-	err = req.ToJSON(&ip)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(ip.Origin)
+	var ip IP
+	must.NoError(t, req.ToJSON(&ip))
 
-	if n := strings.Count(ip.Origin, "."); n != 3 {
-		t.Fatal("response is not valid ip")
-	}
+	n := strings.Count(ip.Origin, ".")
+	must.Eq(t, 3, n)
 }
 
 func TestToFile(t *testing.T) {
 	f := "beego_testfile"
 	req := Get("http://httpbin.org/ip")
-	err := req.ToFile(f)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		ignore.Error(os.Remove(f))
-	}()
+	must.NoError(t, req.ToFile(f))
+
+	t.Cleanup(func() {
+		_ = os.Remove(f)
+	})
+
 	b, err := os.ReadFile(f)
-	if n := strings.Index(string(b), "origin"); n == -1 {
-		t.Fatal(err)
-	}
+	must.NoError(t, err)
+	must.StrContains(t, string(b), "origin")
 }
 
 func TestHeader(t *testing.T) {
 	req := Get("http://httpbin.org/headers")
 	req.Header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.57 Safari/537.36")
 	str, err := req.String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(str)
+	must.NoError(t, err)
+	must.StrContains(t, str, "KHTML")
 }
