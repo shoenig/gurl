@@ -23,7 +23,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -32,6 +31,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/shoenig/ignore"
 )
 
 const (
@@ -91,7 +92,6 @@ func parsePrintOption(s string) {
 		printOption = printReqHeader | printReqBody | printRespHeader | printRespBody
 		return
 	}
-
 	if strings.ContainsRune(s, 'H') {
 		printOption |= printReqHeader
 	}
@@ -104,7 +104,6 @@ func parsePrintOption(s string) {
 	if strings.ContainsRune(s, 'b') {
 		printOption |= printRespBody
 	}
-	return
 }
 
 func main() {
@@ -130,7 +129,7 @@ func main() {
 			panic(err)
 		}
 		if fi.Size() != 0 {
-			stdin, err = ioutil.ReadAll(os.Stdin)
+			stdin, err = io.ReadAll(os.Stdin)
 			if err != nil {
 				log.Fatal("Read from Stdin", err)
 			}
@@ -141,13 +140,13 @@ func main() {
 		usage()
 	}
 	if strings.HasPrefix(*URL, ":") {
-		urlb := []byte(*URL)
+		urlB := []byte(*URL)
 		if *URL == ":" {
 			*URL = "http://localhost/"
-		} else if len(*URL) > 1 && urlb[1] != '/' {
+		} else if len(*URL) > 1 && urlB[1] != '/' {
 			*URL = "http://localhost" + *URL
 		} else {
-			*URL = "http://localhost" + string(urlb[1:])
+			*URL = "http://localhost" + string(urlB[1:])
 		}
 	}
 	if !strings.HasPrefix(*URL, "http://") && !strings.HasPrefix(*URL, "https://") {
@@ -183,11 +182,11 @@ func main() {
 		}
 		httpreq.SetProxy(http.ProxyURL(purl))
 	} else {
-		eurl, err := http.ProxyFromEnvironment(httpreq.GetRequest())
+		envURL, err := http.ProxyFromEnvironment(httpreq.GetRequest())
 		if err != nil {
 			log.Fatal("Environment Proxy Url parse err", err)
 		}
-		httpreq.SetProxy(http.ProxyURL(eurl))
+		httpreq.SetProxy(http.ProxyURL(envURL))
 	}
 	if body != "" {
 		httpreq.Body(body)
@@ -200,7 +199,7 @@ func main() {
 		if err != nil {
 			httpreq.Body(stdin)
 		} else {
-			httpreq.JsonBody(j)
+			_, _ = httpreq.JsonBody(j)
 		}
 	}
 
@@ -214,6 +213,9 @@ func main() {
 	if err != nil {
 		log.Fatalln("can't get the url", err)
 	}
+	defer func() {
+		_ = res.Body.Close()
+	}()
 
 	// download file
 	if download {
@@ -224,7 +226,7 @@ func main() {
 				f = strings.TrimSpace(f)
 				if strings.HasPrefix(f, "filename=") {
 					// Remove 'filename='
-					f = strings.TrimLeft(f, "filename=")
+					f = strings.TrimPrefix(f, "filename=")
 
 					// Remove quotes and spaces from either end
 					f = strings.TrimLeft(f, "\"' ")
@@ -265,8 +267,8 @@ func main() {
 			log.Fatal("Can't Write the body into file", err)
 		}
 		pb.Finish()
-		defer fd.Close()
-		defer res.Body.Close()
+		defer ignore.Close(fd)
+		defer ignore.Close(res.Body)
 		return
 	}
 
@@ -347,11 +349,11 @@ func main() {
 	}
 }
 
-var usageinfo string = `bat is a Go implemented CLI cURL-like tool for humans.
+var usageInfo string = `gurl is a Go implemented CLI cURL-like tool for humans.
 
 Usage:
 
-	bat [flags] [METHOD] URL [ITEM [ITEM]]
+	gurl [flags] [METHOD] URL [ITEM [ITEM]]
 
 flags:
   -a, -auth=USER[:PASS]       Pass a username:password pair as the argument
@@ -372,7 +374,7 @@ flags:
   -v, -version=true           Show Version Number
 
 METHOD:
-  bat defaults to either GET (if there is no request data) or POST (with request data).
+  gurl defaults to either GET (if there is no request data) or POST (with request data).
 
 URL:
   The only information needed to perform a request is a URL. The default scheme is http://,
@@ -387,12 +389,12 @@ ITEM:
 
 Example:
 
-	bat beego.me
+	gurl beego.me
 
-more help information please refer to https://github.com/astaxie/bat
+more help information please refer to https://github.com/shoenig/gurl
 `
 
 func usage() {
-	fmt.Println(usageinfo)
+	fmt.Print(usageInfo)
 	os.Exit(2)
 }

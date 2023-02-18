@@ -66,7 +66,7 @@ func ColorfulJson(str string) string {
 	var rsli []rune
 	var key, val, startcolor, endcolor, startsemicolon bool
 	var prev rune
-	for _, char := range []rune(str) {
+	for _, char := range str {
 		switch char {
 		case ' ':
 			rsli = append(rsli, char)
