@@ -36,7 +36,7 @@ import (
 )
 
 const (
-	version              = "0.1.0"
+	version              = "v0"
 	printReqHeader uint8 = 1 << (iota - 1)
 	printReqBody
 	printRespHeader
@@ -206,7 +206,7 @@ func main() {
 	// AB bench
 	if bench {
 		httpreq.Debug(false)
-		RunBench(httpreq)
+		runBench(httpreq)
 		return
 	}
 	res, err := httpreq.Response()

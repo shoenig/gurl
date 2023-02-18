@@ -3,13 +3,16 @@ package main
 import (
 	"log"
 	"strings"
+
+	"github.com/hashicorp/go-set"
 )
 
-var methodList = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+var methods = set.From([]string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"})
 
 func filter(args []string) []string {
 	var i int
-	if inSlice(strings.ToUpper(args[i]), methodList) {
+
+	if methods.Contains(strings.ToUpper(args[i])) {
 		*method = strings.ToUpper(args[i])
 		i++
 	} else if len(args) > 0 && *method == "GET" {
