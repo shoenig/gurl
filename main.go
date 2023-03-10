@@ -389,9 +389,7 @@ ITEM:
 
 Example:
 
-	gurl beego.me
-
-more help information please refer to https://github.com/shoenig/gurl
+	gurl example.com
 `
 
 func usage() {

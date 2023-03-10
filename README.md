@@ -253,14 +253,14 @@ Note that `@` is used to simulate a file upload form field.
 To set custom headers you can use the Header:Value notation:
 
 	$ gurl example.org  User-Agent:Bacon/1.0  'Cookie:valued-visitor=yes;foo=bar'  \
-    X-Foo:Bar  Referer:http://beego.me/
+    X-Foo:Bar  Referer:http://example.com
 
 	GET / HTTP/1.1
 	Accept: */*
 	Accept-Encoding: gzip, deflate
 	Cookie: valued-visitor=yes;foo=bar
 	Host: example.org
-	Referer: http://beego.me/
+	Referer: http://example.com
 	User-Agent: Bacon/1.0
 	X-Foo: Bar
 	
