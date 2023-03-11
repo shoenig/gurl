@@ -1,10 +1,12 @@
+NAME = gurl
+
 .PHONY: build
 build: clean
-	CGO_ENABLED=0 go build -o output/gurl
+	CGO_ENABLED=0 go build -o output/$(NAME)
 
 .PHONY: clean
 clean:
-	rm -rf dist output/gurl
+	rm -rf dist output/$(NAME)
 
 .PHONY: test
 test:
